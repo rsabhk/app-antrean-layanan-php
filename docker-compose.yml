@@ -1,0 +1,51 @@
+version: '3'
+services:
+
+  #PHP Service
+  app:
+    image: registry1.rsabhk.co.id:5080/rsabhk/antrean-layanan-php:latest
+    container_name: ${APP_NAME}
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: ${APP_NAME}
+      SERVICE_TAGS: ${APP_ENV}
+    working_dir: /var/www
+    # ports:
+    # - "8780:80"
+    volumes:
+      # - ./nginx/:/etc/nginx/conf.d
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./openssl.cnf:/etc/ssl/openssl.cnf
+      #- ./public:/var/www
+      #- ./${DOC_ROOT}/:/var/www
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+      - ./php/www.conf:/usr/local/etc/php-fpm.d/www.conf
+    networks:
+      - antrean-layanan-php-network
+
+  #Nginx Service
+  webserver:
+    image: nginx:alpine
+    container_name: ws-${APP_NAME}
+    restart: unless-stopped
+    tty: true
+    working_dir: /var/www
+    depends_on:
+      - app
+    ports:
+      - "8780:80"
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./${DOC_ROOT}/:/var/www
+      - ./nginx/:/etc/nginx/conf.d
+    networks:
+      - antrean-layanan-php-network
+
+#Docker Networks
+networks:
+  antrean-layanan-php-network:
+    driver: bridge
+
